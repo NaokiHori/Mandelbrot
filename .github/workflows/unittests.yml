@@ -1,0 +1,24 @@
+name: UnitTests
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+
+  perform-tests:
+    name: Performs unit tests
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Test
+        run: |
+          set -x
+          set -e
+          cargo test
+

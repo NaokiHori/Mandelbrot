@@ -1,0 +1,62 @@
+name: QuickStart
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '34 3 * * 0'
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    name: Build and run library
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Build and run
+        run: |
+          # repeat until success
+          while true
+          do
+            if cargo run \
+              --release \
+              -- \
+              --seed=$RANDOM$RANDOM \
+              --grid_size=1.e-7 \
+              --fname=image.ppm \
+              --width=1280 \
+              --height=640 > log.out ; then
+              break
+            fi
+          done
+      - name: Convert ppm to jpg
+        run: |
+          sudo apt-get -y update && \
+          sudo apt-get -y install imagemagick
+          convert image.ppm image.jpg
+      - name: Pack artifacts
+        run: |
+          set -x
+          set -e
+          mkdir artifacts
+          cp image.jpg artifacts/
+          cp log.out artifacts/
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: artifacts
+      - name: Push artifact
+        run: |
+          git config --local user.email "36466440+NaokiHori@users.noreply.github.com"
+          git config --local user.name "NaokiHori"
+          git switch -c artifact
+          git add image.jpg
+          git commit -m "Update image" -a || true
+          git push -f origin artifact
+
